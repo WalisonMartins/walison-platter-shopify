@@ -1,0 +1,279 @@
+{%- schema -%}
+{
+  "name": "Swiper Products",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Title",
+      "default": "Best Sellers"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button Text",
+      "default": "Shop All Best Sellers"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button Link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Swiper Products",
+      "category": "Products"
+    }
+  ]
+}
+{%- endschema -%}
+
+{%- style -%}
+  @import url('https://unpkg.com/swiper@8/swiper-bundle.min.css');
+
+  .swiper-scrollbar {
+    height: 4px !important;
+  }
+
+  .swiper-scrollbar:hover {
+    height: 6px !important;
+  }
+
+  .swiper-scrollbar:active {
+    height: 6px !important;
+  }
+
+  .swiper-scrollbar-drag {
+    height: 100%;
+    background-color: #000000 !important;
+    display: block !important;
+    cursor: grab !important;
+  }
+
+  /* Layout mobile */
+  @media (max-width: 640px) {
+    .swiper-wrapper {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      transform: none !important;
+      padding-bottom: 0 !important;
+    }
+
+    .swiper-slide {
+      width: 100% !important;
+      margin-right: 0 !important;
+    }
+
+    .swiper-slide:nth-child(n + 5) {
+      display: none;
+    }
+
+    .mobile-show-more-btn {
+      transition: opacity 0.3s ease;
+    }
+
+    .swiper-scrollbar {
+      display: none;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .custom-scrollbar {
+      display: block;
+    }
+  }
+
+  .hover-image-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .primary-image {
+    transition: opacity 0.3s ease !important;
+  }
+
+  .secondary-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease !important;
+  }
+
+  .hover-image-container:hover .primary-image {
+    opacity: 0;
+  }
+
+  .hover-image-container:hover .secondary-image {
+    opacity: 1;
+    visibility: visible;
+  }
+{%- endstyle -%}
+
+<link rel="stylesheet" href="https://unpkg.com/swiper@8/swiper-bundle.min.css">
+<script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
+
+<section class="w-full">
+  <div class="max-w-[1920px] mx-auto overflow-hidden">
+    <div class="px-6 sm:pr-0 sm:pl-9 md:pl-14 lg:pl-20 xl:pl-28 2xl:pl-32 pt-20 pb-24">
+      <!-- Header -->
+      <div class="pr-9 md:pr-14 lg:pr-20 xl:pr-28 2xl:pr-32 flex justify-center sm:justify-between items-center mb-6 sm:mb-9">
+        <h2 class="!text-3xl lg:!text-4xl !font-black !font-pro !text-black">
+          {{ section.settings.heading }}
+        </h2>
+        <a class="!hidden sm:!flex !items-center group !gap-2" href="{{ section.settings.button_link }}">
+          <span class="!font-semibold !text-sm !font-poppins !text-[#5C553A]">
+            {{ section.settings.button_text }}
+          </span>
+          <img
+            class="size-5 group-hover:left-2 left-0 relative transition-all duration-300 ease-in-out"
+            src="{{ 'arrow-narrow-right.svg' | asset_url }}"
+            alt=""
+            loading="lazy"
+          >
+        </a>
+      </div>
+
+      <!-- Swiper container -->
+      <div class="swiper">
+        <div class="swiper-wrapper">
+          {% for product in collections[section.settings.collection].products %}
+            <div class="swiper-slide !w-full sm:!w-48 md:!w-52 lg:!w-64 xl:!w-72 2xl:!w-[355px]">
+              <a href="{{ product.url }}" class="block w-full">
+                <div class="relative rounded-lg overflow-hidden w-full h-40 sm:size-48 md:size-52 lg:size-64 xl:size-72 2xl:size-[355px] hover-image-container">
+                  {% if product.tags contains 'best seller' %}
+                    <div class="absolute z-10 bg-white top-2 left-1 sm:left-2 py-1 px-2 rounded-full border border-black flex justify-center items-center">
+                      <span class="text-[10px] font-normal text-black font-bebas leading-none pt-[2px]">
+                        BEST SELLER
+                      </span>
+                    </div>
+                  {% endif %}
+
+                  {% if product.compare_at_price > product.price %}
+                    <div class="absolute z-10 bg-[#5C7962] top-2 right-1 sm:right-7 py-1 px-2 rounded-full border border-black flex justify-center items-center">
+                      <span class="text-[10px] font-normal text-[#FFFFFA] font-bebas leading-none pt-[2px]">
+                        SAVE
+                        {{
+                          product.compare_at_price
+                          | minus: product.price
+                          | times: 100.0
+                          | divided_by: product.compare_at_price
+                          | round
+                        -}}
+                        %
+                      </span>
+                    </div>
+                  {% endif %}
+
+                  <div class="hover-image-container relative h-full w-full">
+                    <img
+                      class="absolute inset-0 w-full h-full object-cover primary-image transition-opacity duration-300"
+                      src="{{ product.featured_image | image_url: width: 800 }}"
+                      alt="{{ product.title }}"
+                      loading="lazy"
+                    >
+                    {% if product.images.size > 1 %}
+                      <img
+                        class="secondary-image absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                        src="{{ product.images[1] | image_url: width: 800 }}"
+                        alt="{{ product.title }}"
+                        loading="lazy"
+                      >
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="mt-3 sm:mt-4 px-2 md:px-3 flex flex-col gap-2 xl:gap-3">
+                  <h2 class="uppercase font-normal !text-base md:!text-lg text-left font-bebas text-custom-gray leading-none">
+                    {{ product.title }}
+                  </h2>
+                  <div class="flex gap-1 items-center">
+                    <div class="flex gap-[2px]">
+                      {% for i in (1..5) %}
+                        <img
+                          class="size-2 sm:size-3"
+                          src="{{ 'star-icon.svg' | asset_url }}"
+                          alt=""
+                          loading="lazy"
+                        >
+                      {% endfor %}
+                    </div>
+                    <span class="text-[11px] md:text-xs font-normal text-custom-light-gray font-poppins">
+                      {{ product.metafields.reviews.rating_count }} Reviews
+                    </span>
+                  </div>
+                  <span class="text-base font-medium font-poppins text-custom-gray">
+                    {{ product.price | money }}
+                    {% if product.compare_at_price > product.price %}
+                      <span class="line-through text-custom-light-gray ml-2">
+                        {{ product.compare_at_price | money }}
+                      </span>
+                    {% endif %}
+                  </span>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="pr-9 md:pr-14 lg:pr-20 xl:pr-28 2xl:pr-32 mt-5 md:mt-10 lg:mt-14 xl:mt-16">
+          <div class="swiper-scrollbar !w-full !relative"></div>
+        </div>
+      </div>
+
+      {% if collections[section.settings.collection].products.size > 4 %}
+        <div class="!mt-5 sm:!hidden !flex !justify-center">
+          <button class="mobile-show-more-btn !bg-custom-gray !font-poppins !text-base !text-white !px-4 !py-4 !rounded-full !transition !max-w-80 !w-full">
+            Show More
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.matchMedia('(min-width: 640px)').matches) {
+      const swiper = new Swiper('.swiper', {
+        slidesPerView: 'auto',
+        spaceBetween: 24,
+        freeMode: true,
+        resistanceRatio: 0,
+        grabCursor: true,
+        scrollbar: {
+          el: '.swiper-scrollbar',
+          draggable: true,
+        },
+        on: {
+          init: function () {
+            updateScrollbarHandle();
+          },
+          slideChange: function () {
+            updateScrollbarHandle();
+          },
+          resize: function () {
+            updateScrollbarHandle();
+          },
+        },
+      });
+    }
+
+    const showMoreBtn = document.querySelector('.mobile-show-more-btn');
+    if (showMoreBtn) {
+      showMoreBtn.addEventListener('click', () => {
+        document.querySelectorAll('.swiper-slide').forEach((slide) => {
+          slide.style.display = 'block';
+        });
+        showMoreBtn.style.display = 'none';
+      });
+    }
+  });
+</script>
